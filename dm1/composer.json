@@ -1,0 +1,21 @@
+{
+    "name": "de-web/amphp-server",
+    "autoload": {
+        "psr-4": {
+            "App\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Yahir Eduardo Bravo",
+            "email": "yahir.eduardo.bravo@gmail.com"
+        }
+    ],
+    "require": {
+        "amphp/http-server": "^3.4",
+        "monolog/monolog": "^3.8",
+        "amphp/log": "^2.0",
+        "amphp/http-server-router": "^2.0",
+        "amphp/socket": "^2.3"
+    }
+}
