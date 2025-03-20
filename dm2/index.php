@@ -1,6 +1,10 @@
 <?php
 
+use Amp\Http\HttpStatus;
 use Amp\Http\Server\DefaultErrorHandler;
+use Amp\Http\Server\Request;
+use Amp\Http\Server\RequestHandler\ClosureRequestHandler;
+use Amp\Http\Server\Response;
 use Amp\Http\Server\Router;
 use Amp\Http\Server\SocketHttpServer;
 use Amp\Log\ConsoleFormatter;
@@ -10,31 +14,62 @@ use Monolog\Logger;
 use Monolog\Processor\PsrLogMessageProcessor;
 
 use function Amp\ByteStream\getStdout;
+use function Amp\trapSignal;
 
-require __DIR__ . "/vendor/autoload.php";
+require __DIR__.'/vendor/autoload.php';
 
-const APP_PORT=1337;
+const APP_PORT = 1337;
 
-# PSR-3 logger
+// PSR-3 logger
 
 $logHandler = new StreamHandler(getStdout());
-$logHandler->pushProcessor(new PsrLogMessageProcessor());
-$logHandler->setFormatter(new ConsoleFormatter());
+$logHandler->pushProcessor(new PsrLogMessageProcessor);
+$logHandler->setFormatter(new ConsoleFormatter);
 
 $logger = new Logger('server');
 $logger->pushHandler($logHandler);
 
-# Error handler
-$errorHandler = new DefaultErrorHandler();
+// Error handler
+$errorHandler = new DefaultErrorHandler;
 
-# Server instance
+// Server instance
 $server = SocketHttpServer::createForDirectAccess($logger);
 
 $server->expose(new InternetAddress('0.0.0.0', APP_PORT));
 $server->expose(new InternetAddress('[::]', APP_PORT));
 
-# Instance router
-$router = new Router($server,$logger,$errorHandler);
+// Instance router
+$router = new Router($server, $logger, $errorHandler);
 
-# Add routes
-$router->addRoute()
+// Add routes
+$router->addRoute('GET', '/', new ClosureRequestHandler(
+    function () {
+        return new Response(
+            status: HttpStatus::OK,
+            headers: ['Content-type' => 'text/plain'],
+            body: 'Hope wrld'
+        );
+    }
+));
+
+$router->addRoute('GET', '/{name}', new ClosureRequestHandler(
+    function(Request $request){
+        $args = $request->getAttribute(Router::class);
+
+        return new Response(
+            status: HttpStatus::OK,
+            headers:['Content-type'=>'text/plain'],
+            body: "Hope wrld, hi {$args['name']}"
+        );
+    }
+));
+
+// Run the server
+$server->start($router,$errorHandler);
+
+// Listening the server SIG
+$signal = trapSignal([SIGINT, SIGTERM]);
+
+$logger->info("Caught signal $signal, stopping server");
+
+$server->stop();
