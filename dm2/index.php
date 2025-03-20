@@ -13,6 +13,7 @@ use Amp\Log\StreamHandler;
 use Amp\Socket\InternetAddress;
 use Monolog\Logger;
 use Monolog\Processor\PsrLogMessageProcessor;
+use Smarty\Smarty;
 
 use function Amp\ByteStream\getStdout;
 use function Amp\trapSignal;
@@ -51,6 +52,14 @@ $router->setFallback(
     )
 );
 
+// Smarty
+$smartyEngine = new Smarty();
+$smartyEngine->setTemplateDir(__DIR__ . "/smarty/templates");
+$smartyEngine->setConfigDir(__DIR__ . "/smarty/config");
+$smartyEngine->setCompileDir(__DIR__ . "/smarty/compile");
+$smartyEngine->setCacheDir(__DIR__ . "/smarty/cache");
+$smartyEngine->testInstall();
+
 // Add routes
 $router->addRoute('GET', '/', new ClosureRequestHandler(
     function () {
@@ -75,7 +84,7 @@ $router->addRoute('GET', '/greeting/{name}', new ClosureRequestHandler(
 ));
 
 // Route of static content
-$router->addRoute('GET', '/p', new ClosureRequestHandler(
+$router->addRoute('GET', '/static', new ClosureRequestHandler(
     function (Request $req): Response {
 
         $html = <<<'HTML'
@@ -101,6 +110,24 @@ $router->addRoute('GET', '/p', new ClosureRequestHandler(
         );
     }
 ));
+
+// Smarty try
+$router->addRoute('GET', '/smarty', new ClosureRequestHandler(
+    function (Request $req) use ($smartyEngine): Response {
+
+        $smartyEngine->assign('name', 'Ned');
+        // $smartyEngine->display('layouts/index.tpl');
+        $smartyEngine->display('layouts/index.tpl');
+        return new Response(
+            HttpStatus::OK,
+            ['content-type' => 'text/html; charset=utf-8'],
+            "future of smarty"
+        );
+    }
+));
+
+
+
 // Run the server
 $server->start($router, $errorHandler);
 
