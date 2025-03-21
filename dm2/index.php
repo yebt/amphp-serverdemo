@@ -58,7 +58,7 @@ $smartyEngine->setTemplateDir(__DIR__ . "/smarty/templates");
 $smartyEngine->setConfigDir(__DIR__ . "/smarty/config");
 $smartyEngine->setCompileDir(__DIR__ . "/smarty/compile");
 $smartyEngine->setCacheDir(__DIR__ . "/smarty/cache");
-$smartyEngine->testInstall();
+// $smartyEngine->testInstall();
 
 // Add routes
 $router->addRoute('GET', '/', new ClosureRequestHandler(
@@ -117,14 +117,28 @@ $router->addRoute('GET', '/smarty', new ClosureRequestHandler(
 
         $smartyEngine->assign('name', 'Ned');
         // $smartyEngine->display('layouts/index.tpl');
-        $smartyEngine->display('layouts/index.tpl');
+        $html = $smartyEngine->fetch('layouts/index.tpl');
         return new Response(
             HttpStatus::OK,
             ['content-type' => 'text/html; charset=utf-8'],
-            "future of smarty"
+            $html
         );
     }
 ));
+$router->addRoute('GET', '/about', new ClosureRequestHandler(
+    function (Request $req) use ($smartyEngine): Response {
+
+        $smartyEngine->assign('name', 'Ned');
+        // $smartyEngine->display('layouts/index.tpl');
+        $html = $smartyEngine->fetch('pages/about.tpl');
+        return new Response(
+            HttpStatus::OK,
+            ['content-type' => 'text/html; charset=utf-8'],
+            $html
+        );
+    }
+));
+
 
 
 
